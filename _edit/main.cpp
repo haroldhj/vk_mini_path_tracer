@@ -34,18 +34,30 @@ int main(int argc, const char** argv)
   nvvk::Buffer buffer = allocator.createBuffer(bufferCreateInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
                                                                      | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-
+  // Command Pool
   VkCommandPoolCreateInfo cmdPoolInfo{.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,  //
                                       .queueFamilyIndex = context.m_queueGCT};
   VkCommandPool           cmdPool;
   NVVK_CHECK(vkCreateCommandPool(context, &cmdPoolInfo, nullptr, &cmdPool));
 
+  // Command Buffer
+  constexpr uint32_t          cmdBufCnt = 1;
   VkCommandBufferAllocateInfo cmdAllocInfo{.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                                            .commandPool        = cmdPool,
                                            .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                                           .commandBufferCount = 1};
+                                           .commandBufferCount = cmdBufCnt};
   VkCommandBuffer             cmdBuffer;
+  NVVK_CHECK(vkAllocateCommandBuffers(context, &cmdAllocInfo, &cmdBuffer));
 
+  VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                                     .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
+  NVVK_CHECK(vkBeginCommandBuffer(cmdBuffer, &beginInfo));
+
+  const float     fillValue    = 0.5f;
+  const uint32_t& fillValueU32 = reinterpret_cast<const uint32_t&>(fillValue);
+  vkCmdFillBuffer(cmdBuffer, buffer.buffer, 0, bufferSizeBytes, fillValueU32);
+
+  vkFreeCommandBuffers(context, cmdPool, cmdBufCnt, &cmdBuffer);
   vkDestroyCommandPool(context, cmdPool, nullptr);
 
   allocator.destroy(buffer);
