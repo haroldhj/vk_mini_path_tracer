@@ -5,7 +5,7 @@
 #include <nvvk/error_vk.hpp>
 #include <nvvk/resourceallocator_vk.hpp>
 
-static const uint64_t render_width = 800;
+static const uint64_t render_width  = 800;
 static const uint64_t render_height = 600;
 
 int main(int argc, const char** argv)
@@ -16,40 +16,38 @@ int main(int argc, const char** argv)
   deviceInfo.apiMajor = 1;
   deviceInfo.apiMinor = 4;
   deviceInfo.addDeviceExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
-  VkPhysicalDeviceAccelerationStructureFeaturesKHR asFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+  VkPhysicalDeviceAccelerationStructureFeaturesKHR asFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
   deviceInfo.addDeviceExtension(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME, false, &asFeatures);
-  VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
+  VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR};
   deviceInfo.addDeviceExtension(VK_KHR_RAY_QUERY_EXTENSION_NAME, false, &rayQueryFeatures);
 
-  context.init(deviceInfo);            // Initialize the context
+  context.init(deviceInfo);  // Initialize the context
 
   nvvk::ResourceAllocatorDedicated allocator;
   allocator.init(context, context.m_physicalDevice);
 
-  VkDeviceSize bufferSizeBytes = render_width * render_height * 3 * sizeof(float);
-  VkBufferCreateInfo bufferCreateInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-    .size = bufferSizeBytes,
-    .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
-  };
+  VkDeviceSize       bufferSizeBytes = render_width * render_height * 3 * sizeof(float);
+  VkBufferCreateInfo bufferCreateInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                      .size  = bufferSizeBytes,
+                                      .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
 
-  nvvk::Buffer buffer = allocator.createBuffer(bufferCreateInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-    | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
-    | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  nvvk::Buffer buffer = allocator.createBuffer(bufferCreateInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+                                                                     | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 
-  VkCommandPoolCreateInfo cmdPoolInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,  //
-                                      .queueFamilyIndex = context.m_queueGCT };
+  VkCommandPoolCreateInfo cmdPoolInfo{.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,  //
+                                      .queueFamilyIndex = context.m_queueGCT};
   VkCommandPool           cmdPool;
   NVVK_CHECK(vkCreateCommandPool(context, &cmdPoolInfo, nullptr, &cmdPool));
 
-  VkCommandBufferAllocateInfo cmdAllocInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-                                           .commandPool = cmdPool,
-                                           .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                                           .commandBufferCount = 1 };
+  VkCommandBufferAllocateInfo cmdAllocInfo{.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                                           .commandPool        = cmdPool,
+                                           .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                                           .commandBufferCount = 1};
   VkCommandBuffer             cmdBuffer;
 
   vkDestroyCommandPool(context, cmdPool, nullptr);
 
   allocator.destroy(buffer);
-  context.deinit();                    // Don't forget to clean up at the end of the program!
+  context.deinit();  // Don't forget to clean up at the end of the program!
 }
