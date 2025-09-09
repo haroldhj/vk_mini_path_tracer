@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <nvvk/context_vk.hpp>
+#include <nvvk/error_vk.hpp>
 #include <nvvk/resourceallocator_vk.hpp>
 
 static const uint64_t render_width = 800;
@@ -35,12 +36,20 @@ int main(int argc, const char** argv)
     | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
     | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  void* data = allocator.map(buffer);
-  float* fltData = reinterpret_cast<float*>(data);
-  printf("First three elements: %f, %f, %f\n", fltData[0], fltData[1], fltData[2]);
-  allocator.unmap(buffer);
+
+  VkCommandPoolCreateInfo cmdPoolInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,  //
+                                      .queueFamilyIndex = context.m_queueGCT };
+  VkCommandPool           cmdPool;
+  NVVK_CHECK(vkCreateCommandPool(context, &cmdPoolInfo, nullptr, &cmdPool));
+
+  VkCommandBufferAllocateInfo cmdAllocInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                                           .commandPool = cmdPool,
+                                           .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                                           .commandBufferCount = 1 };
+  VkCommandBuffer             cmdBuffer;
+
+  vkDestroyCommandPool(context, cmdPool, nullptr);
 
   allocator.destroy(buffer);
-
   context.deinit();                    // Don't forget to clean up at the end of the program!
 }
