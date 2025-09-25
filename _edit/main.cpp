@@ -57,6 +57,8 @@ int main(int argc, const char** argv)
   const uint32_t& fillValueU32 = reinterpret_cast<const uint32_t&>(fillValue);
   vkCmdFillBuffer(cmdBuffer, buffer.buffer, 0, bufferSizeBytes, fillValueU32);
 
+  NVVK_CHECK(vkEndCommandBuffer(cmdBuffer));
+
   vkFreeCommandBuffers(context, cmdPool, cmdBufCnt, &cmdBuffer);
   vkDestroyCommandPool(context, cmdPool, nullptr);
 
