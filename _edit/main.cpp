@@ -57,7 +57,25 @@ int main(int argc, const char** argv)
   const uint32_t& fillValueU32 = reinterpret_cast<const uint32_t&>(fillValue);
   vkCmdFillBuffer(cmdBuffer, buffer.buffer, 0, bufferSizeBytes, fillValueU32);
 
+  VkMemoryBarrier memoryBarrier{
+      .sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+      .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+      .dstAccessMask = VK_ACCESS_HOST_READ_BIT,
+  };
+  vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 1, &memoryBarrier, 0,
+                       nullptr, 0, nullptr);
+
   NVVK_CHECK(vkEndCommandBuffer(cmdBuffer));
+
+  VkSubmitInfo submitInfo{
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers = &cmdBuffer,
+  };
+
+  vkQueueSubmit(context.m_queueGCT, 1, &submitInfo, VK_NULL_HANDLE);
+
+  vkQueueWaitIdle(context.m_queueGCT);
 
   vkFreeCommandBuffers(context, cmdPool, cmdBufCnt, &cmdBuffer);
   vkDestroyCommandPool(context, cmdPool, nullptr);
