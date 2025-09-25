@@ -5,6 +5,9 @@
 #include <nvvk/error_vk.hpp>
 #include <nvvk/resourceallocator_vk.hpp>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 static const uint64_t render_width  = 800;
 static const uint64_t render_height = 600;
 
@@ -76,6 +79,10 @@ int main(int argc, const char** argv)
   vkQueueSubmit(context.m_queueGCT, 1, &submitInfo, VK_NULL_HANDLE);
 
   vkQueueWaitIdle(context.m_queueGCT);
+
+  void* data = allocator.map(buffer);
+  stbi_write_hdr("out.hdr", render_width, render_height, 3, reinterpret_cast<float*>(data));
+  allocator.unmap(buffer);
 
   vkFreeCommandBuffers(context, cmdPool, cmdBufCnt, &cmdBuffer);
   vkDestroyCommandPool(context, cmdPool, nullptr);
